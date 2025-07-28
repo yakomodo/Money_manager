@@ -6,6 +6,24 @@ app = FastAPI(title="Money Tracker")
 transactions_storage = []
 current_id = 1
 
+def add_transaction(amount_cents, currency, description, category, date, subcategory, user_id):
+    global current_id
+
+    transaction = {
+        "amount_cents":amount_cents,
+        "currency":currency,
+        "description":description,
+        "category":category,
+        "date":date,
+        "subcategory":subcategory,
+        "user_id":user_id,
+        "id" : current_id
+    }
+    transactions_storage.append(transaction)
+    current_id += 1
+
+    return transaction
+
 @app.get("/")
 def root():
     return {"status": "ok","message": "Ласкаво просимо до Money Tracker!"}
@@ -40,3 +58,5 @@ def get_transactions():
         }
     ]
     return {"status": "ok", "transactions": fake_transactions}
+
+
