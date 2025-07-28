@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.schemas import Currency
+from app.schemas import Currency,OperationType,validate_category_pair,INCOME_CATEGORIES,EXPENSE_CATEGORIES
 
 app = FastAPI(title="Money Tracker")
 
@@ -33,15 +33,14 @@ def health():
     return {"status": "ok"}
 
 @app.post("/transactions")
-def transactions(amount_cents :int,currency: Currency,description:str,category:str,date:str,subcategory:str):
-    return {"status": "ok",
-            "message": "Транзакція додана!",
-            "amount":round(amount_cents / 100, 2) ,
-            "description" : description,
-            "category":category,
-            "subcategory":subcategory,
-            "currency": currency,
-            "date" : date}
+def transactions(amount_cents: int, currency: Currency, description: str, category: str, date: str, subcategory: str,
+                 operation_type: OperationType, user_id: int):
+    if not validate_category_pair(category, subcategory):
+        return {"status": "error", "message": "Неправильна комбінація категорії та підкатегорії"}
+
+    # Викликай свою функцію!
+    created_transaction = add_transaction(amount_cents, currency, description, category, date, subcategory, user_id)
+    return {"status": "ok", "message": "Транзакція додана!", "transaction": created_transaction}
 
 @app.get("/transactions")
 def get_transactions():
@@ -59,4 +58,11 @@ def get_transactions():
     ]
     return {"status": "ok", "transactions": fake_transactions}
 
+@app.get("/categories/{operation_type}")
+def get_categories(operation_type: OperationType):
+    if operation_type == OperationType.INCOME:
+        categories_list = list(INCOME_CATEGORIES.keys())
+    else:  # EXPENSE
+        categories_list = list(EXPENSE_CATEGORIES.keys())
 
+    return {"status": "ok", "operation_type": operation_type, "categories": categories_list}
